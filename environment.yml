@@ -1,0 +1,49 @@
+name: plant_monitor
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Python core
+  - python=3.10
+  - pip
+
+  # Database
+#  - postgres update
+
+  # MQTT
+  - paho-mqtt
+
+  # Data processing and ML
+  - pandas
+  - numpy
+  - scikit-learn
+  - tensorflow
+  - keras
+
+  # Time series analysis
+  - statsmodels
+
+  # Visualization
+  - matplotlib
+  - seaborn
+  - plotly
+
+  # API and Web
+  - flask
+  - flask-mqtt
+  - flask-sqlalchemy
+
+  # Utilities
+  - python-dotenv
+  - pyyaml
+  - jupyter
+
+  # Development tools
+  - pytest
+  - black
+  - flake8
+
+  # Additional pip packages
+  - pip:
+    - schedule
+    - adafruit-circuitpython-dht  # For direct GPIO if needed
