@@ -24,20 +24,41 @@ class MQTTServer:
         # Topics
         self.SENSOR_TOPIC = "garden/+/sensors"  # + is wildcard for plant_id
         self.CONTROL_TOPIC = "garden/{}/control"
+
+
     def start(self):
-        self.client.connect("localhost", 1883, 60)
-        self.client.loop_forever()
+        try:
+            self.client.connect("localhost", 1883, 60)
+            #logic in case of disconnect try to reconnect
+            self.client.on_disconnect = self.on_disconnect
+            self.client.loop_forever()
+        except Exception as e:
+            print(f"Failed to start MQTT server {e}")
+
+    def on_disconnect(self, client, userdata, rc):
+        print(f"Disconnected with result code {rc}")
+        if rc !=0:
+            try:
+                self.client.reconnect()
+            except Exception as e:
+                print(f"Failed to reconnect MQTT server {e}")
+
     def on_connect(self, client, userdata, flags, rc):
         print("Connected with result code "+str(rc))
         # We only do sensor since we do not need control logic at this time
         client.subscribe(self.SENSOR_TOPIC)
+
+    def validate_sensor_data(self,payload):
+        required_fields = ["temperature", "humidity", "light"]
+        return all(field in payload for field in required_fields)
 
     def on_message(self, client, userdata, msg):
         try:
             #Extract plant_id from topic
             plant_id = msg.topic.split("/")[1]
             payload = json.loads(msg.payload.decode())
-
+            if not self.validate_sensor_data(payload):
+                print("Invalid sensor data for plant id {plant_id}")
             # store sensor data
             self.db.store_sensor_data(plant_id, payload)
 
