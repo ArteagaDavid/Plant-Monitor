@@ -29,8 +29,8 @@ class DataBaseHandler:
         light_threshold REAL,
         watering_duration INTEGER,
         lighting_duration INTEGER,
-        light_schedule_start INTEGER,
-        light_schedule_end INTEGER,
+        light_schedule_start TEXT,
+        light_schedule_end TEXT,
         plant_type TEXT,
         ml_enabled boolean
         )
@@ -53,18 +53,18 @@ class DataBaseHandler:
             light_threshold REAL,
             watering_duration INTEGER,
             lighting_duration INTEGER,
-            light_schedule_start INTEGER,
-            light_schedule_end INTEGER,
+            light_schedule_start TEXT,
+            light_schedule_end TEXT,
             ml_enabled BOOLEAN
             )
         ''')
 
         default_settings = [
-            ('herbs', 0.6, 800, 30, 120, 6, 18, False),
-            ('vegetables', 0.7, 1000, 45, 180, 6, 18, False),
-            ('succulents', 0.3, 600, 15, 240, 8, 16, False),
-            ('tropical', 0.8, 400, 60, 120, 6, 18, False),
-            ('default', 0.6, 800, 30, 120, 6, 18, False)  # Generic default
+            ('herbs', 0.6, 800, 30, 120, '06:00:00', '18:00:00', False),
+            ('vegetables', 0.7, 1000, 45, 180, '08:00:00', '18:00:00', False),
+            ('succulents', 0.3, 600, 15, 240, '08:00:00', '18:00:00', False),
+            ('tropical', 0.8, 400, 60, 120, '08:00:00', '18:00:00', False),
+            ('default', 0.6, 800, 30, 120, '08:00:00', '18:00:00', False)  # Generic default
         ]
 
         cursor.executemany('''
@@ -100,14 +100,16 @@ class DataBaseHandler:
             ''')
             defaults = cursor.fetchone()
         # Prepare the settings dict
+        #Setting up new plant set datetime correctly
+        today = datetime.now().strftime("%Y-%m-%d")
         settings = {
             'plant_id': plant_id,
             'moisture_threshold': defaults[1],
             'light_threshold': defaults[2],
             'watering_duration': defaults[3],
             'lighting_duration': defaults[4],
-            'light_schedule_start': defaults[5],
-            'light_schedule_end': defaults[6],
+            'light_schedule_start': f"{today} {defaults[5]}",
+            'light_schedule_end': f"{today} {defaults[6]}",
             'plant_type': plant_type,
             'ml_enabled': defaults[7],
         }

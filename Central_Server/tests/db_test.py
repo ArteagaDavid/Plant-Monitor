@@ -44,6 +44,8 @@ class TestDB(unittest.TestCase):
         self.assertEqual(herb_settings[1], 0.6) # Moisture
         self.assertEqual(herb_settings[2], 800) # Light
 
+        self.assertEqual(herb_settings[5], '06:00:00')  # light_schedule_start
+        self.assertEqual(herb_settings[6], '18:00:00')  # light_schedule_end
         conn.close()
 
     def test_set_plant_settings_default(self):
@@ -84,7 +86,7 @@ class TestDB(unittest.TestCase):
 
         self.db_handler.store_sensor_data('test_plant1', test_data)
 
-        conn = sqlite3.connect('../plant_data.db')
+        conn = sqlite3.connect(self.test_db_name)
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM sensor_data WHERE plant_id = 'test_plant1'")
         result = cursor.fetchone()

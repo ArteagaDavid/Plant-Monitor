@@ -7,7 +7,7 @@ import json
 from datetime import datetime
 
 from ipywidgets import Controller
-# from plant_controller import PlantController
+from plant_controller import PlantController
 
 from db_handler import DataBaseHandler
 
@@ -17,9 +17,9 @@ class MQTTServer:
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
-# Here we initialize the modules needed. Database, Plant controll for the automation, and ML for future inference implementation
+# Here we initialize the modules needed. Database, Plant control for the automation, and ML for future inference implementation
         self.db = DataBaseHandler()
-        # self.controller = PlantController(self.db)
+        self.controller = PlantController()
         # self.ml_predictor = MLPredictor()
 
         # Topics are what we subscribe to. (Central server Pi) sensors for data collection. Control watering and light control
@@ -45,14 +45,16 @@ class MQTTServer:
             except Exception as e:
                 print(f"Failed to reconnect MQTT server {e}")
 
-    def on_connect(self, client, flags, rc):
+    def on_connect(self, client, userdata, flags, rc):
         print("Connected with result code "+str(rc))
         # We only do sensor since we do not need control logic at this time
         client.subscribe(self.SENSOR_TOPIC)
 
     def validate_sensor_data(self,payload):
-        required_fields = ["temperature", "humidity", "light"]
-        return all(field in payload for field in required_fields)
+        # required_fields = ["temperature", "humidity", "light"]
+        required_fields = ["moisture", "temperature", "humidity", "light_level", "timestamp"]
+        return all(field in payload for field in required_fields
+                   )
 
     def on_message(self, client, msg):
         """
@@ -64,8 +66,9 @@ class MQTTServer:
         """
         try:
             #Extract plant_id from topic. Plant id identifies the plant or edge Arduino node.
-            plant_id = msg.topic.split("/")[1]
+            plant_id = int(msg.topic.split("/")[1]) # convert plant id to int
             payload = json.loads(msg.payload.decode())
+
             if not self.validate_sensor_data(payload):
                 print("Invalid sensor data for plant id {plant_id}")
             # store sensor data
@@ -74,22 +77,34 @@ class MQTTServer:
             # Get plant settings
             settings = self.db.get_plant_settings(plant_id)
 
+            if not settings:
+                print("No settings for plant id {plant_id}")
+                return
             # Get ML predictions
             # ml_predictions = self.ml_predictor.predict(plant_id,payload)
 
             #Where we calculte the automation decisions for garden.
+            #convert to lists since plant controller is expecting it as a list
+            sensor_data_list = [payload]
+            settings_list = [settings]
+
+
             # Future we will introduce ML model to start controlling
             automation_decisions = self.controller.get_control_decisions(
-                sensor_data = payload,
-                settings = settings
+                sensor_data = sensor_data_list,
+                settings = settings_list,
                 # ml_predictions = ml_predictions
             )
-
+            if not automation_decisions:
+                print("No automation decisions for plant id {plant_id}")
+                return
+            plant_decision = automation_decisions[0]
             control_topic = self.CONTROL_TOPIC.format(plant_id)
             self.client.publish(control_topic, json.dumps(automation_decisions))
 
         except Exception as e:
             print(f"Error processing message: {e}")
+
 if __name__ == "__main__":
     server = MQTTServer()
     server.start()
