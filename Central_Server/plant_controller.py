@@ -34,13 +34,13 @@ class PlantController:
         return plant_data.get("moisture", 0) <= plant_settings.get("moisture_threshold", 100)
 
     def _needs_light(self, plant_data, plant_settings, current_time):
-        try:
-            light_start = datetime.strptime(plant_settings.get("light_schedule_start", ""), "%Y-%m-%d %H:%M:%S")
-            light_end = datetime.strptime(plant_settings.get("light_schedule_end", ""), "%Y-%m-%d %H:%M:%S")
-            return (light_start <= current_time <= light_end and plant_data.get("light_level", 0) < plant_settings.get("light_threshold", 100))
-        except ValueError:
-            print("Error with datetime format")
-            return False
+        # try:
+        #     light_start = datetime.strptime(plant_settings.get("light_schedule_start", ""), "%Y-%m-%d %H:%M:%S")
+        #     light_end = datetime.strptime(plant_settings.get("light_schedule_end", ""), "%Y-%m-%d %H:%M:%S")
+        #     return (light_start <= current_time <= light_end and plant_data.get("light_level", 0) < plant_settings.get("light_threshold", 100))
+        # except ValueError:
+        #     print("Error with datetime format")
+            return True
 
     def _create_plant_decision(self, plant_id, needs_water, needs_light, plant_settings):
         return {
