@@ -52,7 +52,7 @@ class MQTTServer:
 
     def validate_sensor_data(self,payload):
         # required_fields = ["temperature", "humidity", "light"]
-        required_fields = ["moisture", "temperature", "humidity", "light_level", "timestamp"]
+        required_fields = ["moisture", "temperature", "humidity", "light_level"]
         return all(field in payload for field in required_fields
                    )
 
@@ -73,7 +73,6 @@ class MQTTServer:
                 print("Invalid sensor data for plant id {plant_id}")
             # store sensor data
             self.db.store_sensor_data(plant_id, payload)
-
             # Get plant settings
             settings = self.db.get_plant_settings(plant_id)
 
