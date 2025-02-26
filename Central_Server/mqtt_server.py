@@ -37,7 +37,7 @@ class MQTTServer:
         except Exception as e:
             print(f"Failed to start MQTT server {e}")
 
-    def on_disconnect(self, client, rc):
+    def on_disconnect(self, client, userdata, rc):
         print(f"Disconnected with result code {rc}")
         if rc !=0:
             try:
@@ -56,7 +56,7 @@ class MQTTServer:
         return all(field in payload for field in required_fields
                    )
 
-    def on_message(self, client, msg):
+    def on_message(self, client, userdata, msg):
         """
         Collects data from sensors stores into the db, Then gets automation/control instructions
         and publishes it to MQTT server
