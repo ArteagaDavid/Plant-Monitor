@@ -77,7 +77,10 @@ class MQTTServer:
             settings = self.db.get_plant_settings(plant_id)
 
             if not settings:
-                print("No settings for plant id {plant_id}")
+                print("No settings for plant id {plant_id}.")
+                print("Setting for plant id {plant_id}: {settings}.")
+                # Set the plant settings
+                self.db.set_plant_settings(plant_id)
                 return
             # Get ML predictions
             # ml_predictions = self.ml_predictor.predict(plant_id,payload)
