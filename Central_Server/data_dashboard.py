@@ -115,8 +115,50 @@ st.info(
 
 # Side Bar
 with st.sidebar:
-    st.header("Sidebar")
-    name = st.text_input("Enter your name")
+    st.header("Debug Controls")
+    with st.form("plant_settings_form"):
+        #plant id
+        plant_id = st.number_input("Plant ID", min_value=101, max_value=999, step=1, help="Enter the plant/edge node identifier (101-999)")
+
+        #Moisture threshold
+        moisture_threshold = st.slider("Moisture Threshold (%)",
+                                       min_value=0.0, max_value=100.0, value=60.0, step=5.0,
+                                       help="Set moisture level below current reading to trigger irrigation")
+        #Watering duration selection
+        duration_options = [5, 10, 15, 20, 25, 30]
+        watering_duration = st.selectbox("Watering Duration(seconds)", options=duration_options,
+                                         help="Enter the duration that the pump will run for (in seconds)")
+        submit_button = st.form_submit_button(label="Update Settings in db")
+
+        if submit_button:
+            try:
+            # WE are using the existing database connection idk if good practice :D
+                cursor.execute("""
+                UPDATE plant_settings
+                SET moisture_threshold = ?, watering_duration = ?
+                 WHERE plant_id = ?
+                 """, (moisture_threshold, watering_duration, plant_id))
+                conn.commit()
+                #Show success message
+                st.success(f"Updated settings for Plant #{plant_id}: Moisture Threshold = {moisture_threshold}%, Watering Duration = {watering_duration}s")
+            except Exception as e:
+                st.error("Failed to update settings: {str(e)}")
+
+    st.subheader("Current Plant Settings")
+    try:
+        #Query settings using existing connection
+        settings_df = pd.read_sql_query("""
+        SELECT plant_id, moisture_threshold, watering_duration
+        FROM plant_settings
+        ORDER BY plant_id
+        """, conn)
+        # display data frame
+        st.dataframe(settings_df, hide_index=True)
+    except Exception as e:
+        st.error("Failed to load settings: {str(e)}")
+
+
+
 
 
 # Create rounded chart function for consistent styling
