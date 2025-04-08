@@ -104,9 +104,9 @@ class MQTTServer:
                 # Here we check if it is in waterting state if not we initialize.
             if plant_id not in self.watering_state:
                 self.watering_state[plant_id] = {'waiting_for_after': False, 'last_record_id': None}
-
-            if automation_decisions['water_pump']['active']:
-                duration = automation_decisions['water_pump']['duration']
+            automation_decision = automation_decisions[0]
+            if automation_decision['water_pump']['active']:
+                duration = automation_decision['water_pump']['duration']
                 record_id = self.ml_db.store_watering_event_initial(
                     plant_id,
                     payload['moisture'],
