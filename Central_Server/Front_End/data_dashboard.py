@@ -1,3 +1,5 @@
+import os
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -6,7 +8,19 @@ import plotly.graph_objects as go
 import sqlite3
 
 # Connect to database
-conn = sqlite3.connect('plant_data.db')
+db_name = 'plant_data.db'
+def get_db_path(db_name):
+    # get current path
+    current_dir = os.path.dirname(__file__)
+
+    # go up one dir
+    parent_dir = os.path.dirname(current_dir)
+    #construct path
+    dp_path = os.path.join(parent_dir, db_name)
+    return dp_path
+
+db_path = get_db_path(db_name)
+conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 df = pd.read_sql_query("SELECT * FROM sensor_data", conn)
 # Convert to datetime
@@ -106,9 +120,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Add a title
-st.title("Data Quality Dashboard")
+st.title("Smart Garden Dashboard")
 last_row = df.iloc[-1]
-
 # Text
 st.info(
     f"LATEST SENSOR READING: Moisture: {last_row['moisture']:.2f} | Temp: {last_row['temperature']:.1f}°C | Humidity: {last_row['humidity']:.1f}% | Light: {last_row['light_level']} | Time: {last_row['timestamp']}")
@@ -158,9 +171,6 @@ with st.sidebar:
         st.error("Failed to load settings: {str(e)}")
 
 
-
-
-
 # Create rounded chart function for consistent styling
 def create_rounded_chart(data, x_col, y_col, title):
     fig = px.line(data, x=x_col, y=y_col)
@@ -205,15 +215,15 @@ with col1:
 with col2:
     st.header("Temperature")
     fig = create_rounded_chart(df, 'timestamp', 'temperature', "Temperature (°C)")
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, key= 'temp_chart')
 
-# Second row
+# Second row Humidity and Moisture
 col3, col4 = st.columns(2)
 
 with col3:
     st.header("Humidity")
     fig = create_rounded_chart(df, 'timestamp', 'humidity', "Humidity (%)")
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, key= 'humidity_chart')
 
 with col4:
     st.header("Light Intensity & UV")
@@ -285,7 +295,9 @@ with col4:
             )
         ]
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, key= 'light_chart')
+
 
 # Close the database connection when done
 conn.close()
+

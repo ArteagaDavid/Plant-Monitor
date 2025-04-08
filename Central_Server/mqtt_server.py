@@ -5,22 +5,21 @@ This will handle the communication of the Central Sever to the edge nodes (ardui
 import paho.mqtt.client as mqtt
 import json
 from datetime import datetime
-
 from ipywidgets import Controller
 from plant_controller import PlantController
-
 from db_handler import DataBaseHandler
+from ML_Service.ml_db_handler import MLDataBaseHandler
 
-# from ml_predictor import MLPredictor
 class MQTTServer:
     def __init__(self):
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
+        self.watering_state = {} #Track the watering state to capture before and after moisture sensor readings.
 # Here we initialize the modules needed. Database, Plant control for the automation, and ML for future inference implementation
         self.db = DataBaseHandler()
         self.controller = PlantController()
-        # self.ml_predictor = MLPredictor()
+        self.ml_db = MLDataBaseHandler()
 
         # Topics are what we subscribe to. (Central server Pi) sensors for data collection. Control watering and light control
         self.SENSOR_TOPIC = "garden/+/sensors"  # + is wildcard for plant_id
@@ -100,7 +99,31 @@ class MQTTServer:
             if not automation_decisions:
                 print("No automation decisions for plant id {plant_id}")
                 return
-            plant_decision = automation_decisions[0]
+            #Here we store a watering event if the needs water is true.
+            # ["plant_id": null, "water_pump": {"active": false, "duration": 0}, "grow_light": {"active": true}}]
+                # Here we check if it is in waterting state if not we initialize.
+            if plant_id not in self.watering_state:
+                self.watering_state[plant_id] = {'waiting_for_after': False, 'last_record_id': None}
+
+            if automation_decisions['water_pump']['active']:
+                duration = automation_decisions['water_pump']['duration']
+                record_id = self.ml_db.store_watering_event_initial(
+                    plant_id,
+                    payload['moisture'],
+                    duration
+                )
+
+                # Update watering state
+                self.watering_state[plant_id]['waiting_for_after'] = True
+                self.watering_state[plant_id]['last_record_id'] = record_id
+                # self.watering_state[plant_id]['watering_start_time'] = datetime.now()
+
+            elif self.watering_state[plant_id]['waiting_for_after']:
+                moisture_after = payload['moisture']
+                latest_record_id = self.watering_state[plant_id]['last_record_id']
+                self.ml_db.store_watering_event_final(latest_record_id, moisture_after)
+                self.watering_state[plant_id]['waiting_for_after'] = False
+
             control_topic = self.CONTROL_TOPIC.format(plant_id)
             self.client.publish(control_topic, json.dumps(automation_decisions))
 
