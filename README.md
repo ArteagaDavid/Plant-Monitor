@@ -81,6 +81,3 @@ The streamlit dashboard proves:
 * Mobile App: working on iOS app for easier monitoring. Plans of including CORE ML and use vision model for plant species recognition
 * Solar Power Integration: Making edge nodes energy independent
 
-
-## License
-MIT License - Copyright (c) 2025 David Arteaga
