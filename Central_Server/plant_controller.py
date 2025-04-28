@@ -1,4 +1,20 @@
+"""
+Plant Controller for Smart Garden IoT Ecosystem
+
+This module implements the decision-making logic for automating plant care
+in the smart garden system. It determines when plants need watering or lighting
+based on sensor data, configured thresholds, and optionally machine learning predictions.
+
+The controller provides two automation approaches:
+1. Rule-based decisions: Using simple thresholds for moisture and light levels
+2. ML-based decisions: Using predictive models to optimize plant care (future feature)
+
+Dependencies:
+- datetime: For time-based light scheduling
+- ML_Service.ml_inference: For machine learning integration (future feature)
+"""
 from datetime import datetime
+from ML_Service.ml_inference import MLInference
 
 
 class PlantController:
@@ -54,22 +70,21 @@ class PlantController:
                 "active": needs_light
             }
         }
-    def get_ml_based_automation(self, ml_predictions, settings):
-        #For future we want to be able to make ml predictions for plants at the same time
+    def get_ml_based_automation(self, plant_id, sensor_data):
+            #For future we want to be able to make ml predictions for plants at the same time
         results = []
-        for plant_settings in settings:
-            plant_id = plant_settings.get("plant_id")
-            plant_predictions = ml_predictions.get(plant_id, {})
 
-            decisions = {
-                "plant_id": plant_id,
-                "water_pump": {
-                    "active": plant_settings.get("water_pump_active", False),
-                    "duration": plant_settings.get("watering_duration", 0),
-                },
-                "grow_light": {
-                    "active": plant_predictions.get("needs_light", False)
-                }
+        MLInference.predict(plant_id, sensor_data)
+
+        decisions = {
+            "plant_id": plant_id,
+            "water_pump": {
+            "active": plant_settings.get("water_pump_active", False),
+            "duration": plant_settings.get("watering_duration", 0),
+            },
+            "grow_light": {
+            "active": plant_predictions.get("needs_light", False)
             }
-            results.append(decisions)
+        }
+        results.append(decisions)
         return results

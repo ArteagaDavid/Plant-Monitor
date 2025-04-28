@@ -1,3 +1,19 @@
+"""
+Database Handler for Smart Garden IoT Ecosystem
+
+This module provides a SQLite database interface for storing and retrieving
+plant sensor data and settings. It manages sensor readings from edge nodes,
+plant configuration settings, and default plant profiles.
+
+The database structure includes:
+1. sensor_data: Time-series storage of all readings from plant sensors
+2. plant_settings: Configuration data for each individual plant
+3. default_plant_settings: Template settings for different plant types
+
+Dependencies:
+- sqlite3: For database operations
+- datetime: For timestamp handling
+"""
 import sqlite3
 from datetime import datetime
 

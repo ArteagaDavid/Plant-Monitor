@@ -1,11 +1,25 @@
 # Mosquitto server
-'''
-This will handle the communication of the Central Sever to the edge nodes (arduinos)
-'''
+"""
+MQTT Server for Smart Garden IoT Ecosystem
+
+This module implements the central MQTT server that coordinates communication between
+the Raspberry Pi central server and Arduino edge nodes in the smart garden system.
+
+The server:
+1. Subscribes to sensor data from edge nodes
+2. Processes and stores sensor readings in a database
+3. Makes automation decisions based on plant settings and sensor data
+4. Publishes control commands to edge nodes for watering and lighting
+
+Dependencies:
+- paho-mqtt: For MQTT client implementation
+- json: For payload serialization/deserialization
+- datetime: For timestamp tracking
+- custom modules: PlantController, DataBaseHandler, MLDataBaseHandler
+"""
 import paho.mqtt.client as mqtt
 import json
 from datetime import datetime
-from ipywidgets import Controller
 from plant_controller import PlantController
 from db_handler import DataBaseHandler
 from ML_Service.ml_db_handler import MLDataBaseHandler
@@ -129,6 +143,9 @@ class MQTTServer:
 
         except Exception as e:
             print(f"Error processing message: {e}")
+    def process_ios_command(self, plant_id, payload):
+        #Set recently watered to true
+        self.client.publish(self.CONTROL_TOPIC, payload)
 
 if __name__ == "__main__":
     server = MQTTServer()
